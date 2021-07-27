@@ -76,8 +76,8 @@ rho = zeros(100,1);
 A = ReplayAttacker();
 Tr = 1:20;
 Ta = {41:60, 81:100};
-rho(Ta{1}) = cos(1/pi * Ta{1});
-rho(Ta{2}) = cos(1/pi * Ta{2});
+rho(Ta{1}) = rand(numel(Ta{1}),1);
+rho(Ta{2}) = rand(numel(Ta{2}),1);
 expu = [u(1:Ta{1}(1)-1); ...
         rho(Ta{1}); ...
         u(Ta{1}(end)+1:Ta{2}(1)-1); ...
