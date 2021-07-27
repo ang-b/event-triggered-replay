@@ -41,7 +41,26 @@ x0 = zeros(2,1);
 
 L = place(Ad', Cd', [0.6, 0.5]).';
 
-%% event-triggered 
+%% event-triggering stuff
 
 delta = 1e-2;
-N = 1/(0.784815);
+N = 1/(0.784815); % this could be dependent on delta
+
+%% simulation
+
+isEvt = false;
+disp("Simulating in event triggering mode");
+periodicCtrlSim = sim('dcmotor_sim');
+
+disp("Simulating in periodic control mode");
+isEvt = true;
+evtCtrlSim = sim('dcmotor_sim');
+
+%%
+figure;
+subplot(2,1,1)
+plot(periodicCtrlSim.data.getElement('r').Values)
+title("Periodic control");
+subplot(2,1,2)
+plot(EvtCtrlSim.data.getElement('r').Values)
+title("Event-triggered control");
