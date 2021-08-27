@@ -1,5 +1,11 @@
 load('dcmotorparams.mat')
 
+%% analysis
+h = @(p) haux(p, Ad, Bd, -K);
+
+for i=1:10
+   abs(eig(h(i))) 
+end
 %% simulation
 
 isEvt = false;
@@ -16,5 +22,5 @@ subplot(2,1,1)
 plot(periodicCtrlSim.data.getElement('r').Values)
 title("Periodic control");
 subplot(2,1,2)
-plot(EvtCtrlSim.data.getElement('r').Values)
+plot(evtCtrlSim.data.getElement('r').Values)
 title("Event-triggered control");
