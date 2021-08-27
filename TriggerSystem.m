@@ -24,6 +24,7 @@ classdef TriggerSystem < matlab.System ...
         function [uTrig, trig] = stepImpl(this, u, err, delta)
              if err >= delta
                  uTrig = u;
+                 this.heldInput = uTrig;
                  trig = true;
              else
                  uTrig = this.heldInput;

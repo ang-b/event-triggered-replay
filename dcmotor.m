@@ -1,4 +1,8 @@
-load('dcmotorparams.mat')
+if (exist('dcmotorparams.mat', 'file') == 2)
+    load('dcmotorparams.mat')
+else
+    makedcmotorparams 
+end
 
 %% analysis
 h = @(p) haux(p, Ad, Bd, -K);
