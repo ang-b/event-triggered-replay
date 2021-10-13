@@ -39,28 +39,28 @@ z = tf('z', Ts);
 
 x0 = zeros(2,1);
 
-L = place(Ad', Cd', [0.6, 0]).';
+L = place(Ad', Cd', [0.6, 0.8]).';
 
 % event triggering threshold
 delta = 1e-2;
 
-% computing the feed-forward gain adjustment
+%% computing the feed-forward gain adjustment
 sys = ss(Ad, Bd, [Cd; eye(2)], 0, Ts);
-obsv = ss(Ad - L*Cd, [L Bd], eye(2), zeros(2,2), Ts);
-ctrl = ss(0, zeros(1,2) , 1, -K, -1);
+obs = ss(Ad - L*Cd, [L Bd], eye(2), zeros(2,2), Ts);
+ctr = ss(0, zeros(1,2) , 1, -K, -1);
 
-ctrl.u = 'uc';
-ctrl.y = 'u';
+ctr.u = 'uc';
+ctr.y = 'u';
 
 sys.u = 'u';
 sys.y = {'meas', 'x1', 'x2'};
 
-obsv.u = {'meas', 'u'};
-obsv.y = 'xhat';
+obs.u = {'meas', 'u'};
+obs.y = 'xhat';
 
 sum_ref = sumblk('uc = xhat - xref', 2);
 
-T = connect(ctrl, sys, obsv, sum_ref, 'xref', 'x1');
+T = connect(ctr, sys, obs, sum_ref, 'xref', 'x1');
 N = dcgain(T);
 
 % gain correction for parameter set II
