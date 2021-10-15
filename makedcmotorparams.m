@@ -41,30 +41,41 @@ x0 = zeros(2,1);
 
 L = place(Ad', Cd', [0.6, 0.8]).';
 
-% event triggering threshold
+% event triggering parameters
 delta = 1e-2;
+isEvt = false; % this is for unmanaged simulations
 
-%% computing the feed-forward gain adjustment
-sys = ss(Ad, Bd, [Cd; eye(2)], 0, Ts);
-obs = ss(Ad - L*Cd, [L Bd], eye(2), zeros(2,2), Ts);
-ctr = ss(0, zeros(1,2) , 1, -K, -1);
+%% compute feedforward gain (automatic)
 
-ctr.u = 'uc';
-ctr.y = 'u';
+% sys = ss(Ad, Bd, [Cd; eye(2)], 0, Ts);
+% obs = ss(Ad - L*Cd, [L Bd], eye(2), zeros(2,2), Ts);
+% ctr = ss(0, zeros(1,2) , 1, -K, -1);
+% 
+% ctr.u = 'uc';
+% ctr.y = 'u';
+% 
+% sys.u = 'u';
+% sys.y = {'meas', 'x1', 'x2'};
+% 
+% obs.u = {'meas', 'u'};
+% obs.y = 'xhat';
+% 
+% sum_ref = sumblk('uc = xhat - xref', 2);
+% 
+% T = connect(ctr, sys, obs, sum_ref, 'xref', 'x1');
 
-sys.u = 'u';
-sys.y = {'meas', 'x1', 'x2'};
+%% compute feedfoward gain (analytic)
 
-obs.u = {'meas', 'u'};
-obs.y = 'xhat';
+Rd = Bd*K;
+Abar = [Ad, -Rd; L*Cd, Ad-L*Cd-Rd];
+Rbar = repmat(Rd, 2, 1);
+Cbar = [eye(size(Ad,1)), zeros(size(Ad,1))];
 
-sum_ref = sumblk('uc = xhat - xref', 2);
+N = (eye(size(Abar,1)) - Abar) \ Rbar;
+isg_1 = N(1,:);
 
-T = connect(ctr, sys, obs, sum_ref, 'xref', 'x1');
-N = dcgain(T);
+save('dcmotorparams.mat');
 
-% gain correction for parameter set II
-% N = 1/(0.784815); % this could be dependent on delta
-isEvt = false;
+%% other parameters
 
-% save('dcmotorparams.mat');
+U = Cbar / (eye(size(Abar,1)) - Abar) * repmat(Bd, 2, 1);

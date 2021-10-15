@@ -1,17 +1,13 @@
-FORCE_RERUN = true;
+FORCE_RERUN = false;
 if exist('dcmotorparams.mat', 'file') == 2 && ~FORCE_RERUN
     load('dcmotorparams.mat')
 else
     makedcmotorparams 
 end
 
-%% analysis
-h = @(p) haux(p, Ad, Bd, -K);
-
-for i=1:10
-   abs(eig(h(i)));
-end
 %% simulation
+
+warning off
 
 isEvt = false;
 disp("Simulating in periodic control mode");
@@ -21,7 +17,9 @@ disp("Simulating in event-triggered control mode");
 isEvt = true;
 evtCtrlSim = sim('dcmotor_sim');
 
-%%
+warning on
+
+%% plots
 close all
 figure(1);
 set(1, 'DefaultTextInterpreter', 'latex');
@@ -39,4 +37,10 @@ title("Event-triggered control", 'FontSize', 15);
 set(gca, 'TickLabelInterpreter', 'latex', 'FontSize', 12);
 ylabel('$r$');
 
-% print('-f1', 'comparison.eps', '-depsc2');
+
+%% printing
+PRINT_FIGS = false;
+
+if PRINT_FIGS 
+    print('-f1', 'comparison.eps', '-depsc2');
+end

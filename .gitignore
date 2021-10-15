@@ -2,3 +2,4 @@
 slprj/
 *.asv
 dcmotorparams.mat
+*.m~

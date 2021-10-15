@@ -21,19 +21,21 @@ classdef TriggerSystem < matlab.System ...
             this.heldInput = zeros(numel(u), 1);
         end
         
-        function [uTrig, trig] = stepImpl(this, u, err, delta)
+        function [uTrig, trig] = stepImpl(this, u, err, delta, aux)
              if err >= delta
                  uTrig = u;
                  this.heldInput = uTrig;
                  trig = true;
              else
-                 uTrig = this.heldInput;
+                 % case 1: standard evt triggered
+                 uTrig = this.heldInput*0.95;
+                 % case 2: control to 0
+%                  uTrig = zeros(size(this.heldInput));
                  trig = false;
              end
         end
 
         function resetImpl(this)
-%             usz = getDiscreteStateSpecification(this, 'heldInput');
             this.heldInput = zeros(size(this.heldInput));
         end
 
@@ -55,7 +57,7 @@ classdef TriggerSystem < matlab.System ...
         end
 
         function num = getNumInputsImpl(~)
-            num = 3;
+            num = 4;
         end
 
         function num = getNumOutputsImpl(~)
