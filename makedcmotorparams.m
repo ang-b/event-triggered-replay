@@ -32,7 +32,7 @@ Cd = C;
 O = obsv(Ad,Cd);
 fprintf("Observability rank: %d\n", rank(O));
 
-cpoles = [0.98 + 0.01i, 0.98 - 0.01i];
+cpoles = [0.8 + 0.01i, 0.8 - 0.01i];
 K = place(Ad, Bd, cpoles);
 
 z = tf('z', Ts);
@@ -74,7 +74,7 @@ Cbar = [eye(size(Ad,1)), zeros(size(Ad,1))];
 N = (eye(size(Abar,1)) - Abar) \ Rbar;
 isg_1 = N(1,:);
 
-save('dcmotorparams.mat');
+% save('dcmotorparams.mat');
 
 %% other parameters
 
