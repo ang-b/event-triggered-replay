@@ -16,12 +16,17 @@ r = 32.91;
 % l = 1.32442e-2;
 % r = 3.2645;
 
+spref = 200* 0.10472; % rad 2 rpm
+% spref = 1;
+
 %% CT state space representation
 % state is [omega; i]
 
 A = [-b/J, Kt/J; -Ke/l, -r/l];
 B = [0; 1/l];
 C = [1, 1];
+
+n = size(A,1);
 
 %% discretization, control and observer 
 Ts = 1e-3;
@@ -32,18 +37,22 @@ Cd = C;
 O = obsv(Ad,Cd);
 fprintf("Observability rank: %d\n", rank(O));
 
+% faster response, less overshoot
 cpoles = [0.8 + 0.01i, 0.8 - 0.01i];
+% slower response, more overshoot
+% cpoles = [0.98 + 0.01i, 0.98 - 0.01i];
+% controller performance does not seem to impact detectablity much
 K = place(Ad, Bd, cpoles);
 
 z = tf('z', Ts);
 
 x0 = zeros(2,1);
 
-L = place(Ad', Cd', [0.6, 0.8]).';
+L = place(Ad', Cd', [0.3, 0.1]).';
 
 % event triggering parameters
-delta = 1e-2;
-isEvt = false; % this is for unmanaged simulations
+delta = 5e-2 * abs(spref);
+isEvt = true; % this is for unmanaged simulations
 
 %% compute feedforward gain (automatic)
 
@@ -74,7 +83,14 @@ Cbar = [eye(size(Ad,1)), zeros(size(Ad,1))];
 N = (eye(size(Abar,1)) - Abar) \ Rbar;
 isg_1 = N(1,:);
 
-% save('dcmotorparams.mat');
+AI = eye(n) - Ad;
+AI1 = AI(1,:);
+AI2 = AI(2,:);
+
+g = AI \ [zeros(1,n); AI2];
+gamma = AI \ B * K;
+
+save('dcmotorparams.mat');
 
 %% other parameters
 

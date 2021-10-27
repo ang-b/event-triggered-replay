@@ -28,7 +28,7 @@ AI1 = AI(1,:);
 AI2 = AI(2,:);
 
 g = AI \ [zeros(1,n); AI2];
-muprim = AI \ B * K;
+gamma = AI \ B * K;
 
 %% main loop
 
@@ -42,8 +42,8 @@ for k = 1:Nsamples-1
         is_out = false;
         xlast = x(:,k);
         theta = randi([-30 30]) * pi/180;
-        e(:,k) = R(theta) * gradc(x(:,k)');
-        u(:,k) = -pinv(Bd)*(eye(n) - Ad)/norm(g) * ((1+eps)*delta*e(:,k)/norm(e(:,k)) + xlast);
+        e(:,k) = -R(theta) * gradc(x(:,k)');
+        u(:,k) = pinv(Bd)*(eye(n) - Ad)/norm(gamma) * ((1+eps)*delta*e(:,k)/norm(e(:,k)) + xlast);
 %         u(:,k) =  -0.8 * K * (xlast - xref./isg_1');
     elseif err(k) >= delta
         triggers(k) = 0;

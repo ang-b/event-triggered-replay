@@ -1,6 +1,6 @@
 classdef TriggerSystem < matlab.System ...
        & matlab.system.mixin.CustomIcon
-    % ReplayAttacker Add summary here
+    % TriggerSystem Add summary here
 
     properties(DiscreteState)
         heldInput;
