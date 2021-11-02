@@ -19,6 +19,8 @@ classdef TriggeredBoundaryController < matlab.System ...
 
     properties(Access = private)
         pB;
+        N;
+        AIN;
     end
 
     methods
@@ -32,7 +34,9 @@ classdef TriggeredBoundaryController < matlab.System ...
             this.heldInput = zeros(size(this.B,2), 1);
             this.isOut = false;
             this.xlast = zeros(2, 1);
-            this.pB = pinv(this.B);
+            this.N = 20;
+            this.pB = pinv(ctr_n(this.A, this.B, this.N));
+            this.AIN = (eye(2) - this.A^this.N);
         end
         
         function [uTrig, trig] = stepImpl(this, xref, x, delta, theta)
@@ -43,8 +47,7 @@ classdef TriggeredBoundaryController < matlab.System ...
                      sin(theta)   cos(theta)];
                 e = M * 2 * x;
                 e = - e/norm(e);
-                uTrig = this.pB * (eye(size(this.A,1)) - this.A) / norm(this.gamma) ... 
-                     * ( (1 + eps)*delta*e + this.xlast);  
+                uTrig = this.pB * ((1+eps)*delta*e + this.AIN*this.xlast);
                 this.heldInput = uTrig;
                 trig = true;
                 this.isOut = false;

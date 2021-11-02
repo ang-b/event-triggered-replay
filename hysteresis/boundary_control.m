@@ -1,7 +1,7 @@
 xref = [3600* 0.10472 ;0];
 % xref = [1 ;0];
 n = length(xref);
-delta = .05*abs(xref(1));
+delta = .02*abs(xref(1));
 
 
 T = 0:Ts:2;
@@ -34,6 +34,8 @@ gamma = AI \ B * K;
 
 is_out = true;
 xlast = zeros(n,1);
+N = 20;
+Ccal = ctr_n(Ad, Bd, N);
 
 for k = 1:Nsamples-1
     err(k) = norm(x(:,k) - xref);
@@ -43,7 +45,8 @@ for k = 1:Nsamples-1
         xlast = x(:,k);
         theta = randi([-30 30]) * pi/180;
         e(:,k) = -R(theta) * gradc(x(:,k)');
-        u(:,k) = pinv(Bd)*(eye(n) - Ad)/norm(gamma) * ((1+eps)*delta*e(:,k)/norm(e(:,k)) + xlast);
+%         u(:,k) = pinv(Bd)*(eye(n) - Ad)/norm(gamma) * ((1+eps)*delta*e(:,k)/norm(e(:,k)) + xlast);
+        u(:,k) = pinv(Ccal)*(delta*e(:,k)/norm(e(:,k)) + (eye(n) - Ad^N)*xlast);
 %         u(:,k) =  -0.8 * K * (xlast - xref./isg_1');
     elseif err(k) >= delta
         triggers(k) = 0;
@@ -80,4 +83,5 @@ figure(3);
 plot(T, err);
 hold on
 line([0 T(end)], [delta delta], 'Color', [1 0 0], 'LineWidth', 1.4);
-ylim([10 30]);
+% ylim([10 30]);
+% ylim('auto');

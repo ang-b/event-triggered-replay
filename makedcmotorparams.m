@@ -34,6 +34,8 @@ Ad = eye(2) + A*Ts;
 Bd = B*Ts;
 Cd = C; 
 
+m = rank(Bd);
+
 O = obsv(Ad,Cd);
 fprintf("Observability rank: %d\n", rank(O));
 
@@ -81,6 +83,7 @@ Rbar = repmat(Rd, 2, 1);
 Cbar = [eye(size(Ad,1)), zeros(size(Ad,1))];
 
 N = (eye(size(Abar,1)) - Abar) \ Rbar;
+isg = N(1:n,1:n);
 isg_1 = N(1,:);
 
 AI = eye(n) - Ad;
@@ -95,3 +98,31 @@ save('dcmotorparams.mat');
 %% other parameters
 
 U = Cbar / (eye(size(Abar,1)) - Abar) * repmat(Bd, 2, 1);
+
+%% factorization method
+
+[Qf,Lf] = qr(AI.');
+Qf = Qf.';
+Lf = Lf.';
+
+% assume the system is in form [0; B1]
+
+Q1 = Qf(1:n-m, :);
+Q2 = Qf(n-m+1:end, :);
+
+L1 = Lf(1:n-m,1:n-m);
+L2 = Lf(n-m+1:end,1:n-m);
+L3 = Lf(n-m+1:end,n-m+1:end);
+
+X = Q2'*inv(L3)*L2*Q1 + Q2.'*Q2;
+
+invLBlock = [inv(L1) 0; -inv(L3)*L2*inv(L1) inv(L3)];
+
+%% inverse dynamics
+
+% C1 = [Bd Ad*Bd];
+% 
+% for k = n:10
+%     k
+%     u = pinv(ctr_n(Ad, Bd, k)) * (delta * [-1;0] + (eye(n) - Ad^k)*[1;0])
+% end

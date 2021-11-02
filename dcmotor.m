@@ -1,28 +1,37 @@
 %% flags
 clearvars
 
-FORCE_RERUN = false;
-PRINT_FIGS = false;
-
-%% setup
-if exist('dcmotorparams.mat', 'file') == 2 && ~FORCE_RERUN
-    load('dcmotorparams.mat')
-else
-    makedcmotorparams 
-end
+flags.FORCE_PARAMS = false;
+flags.PRINT_FIGS = true;
+flags.RUN_SIM = false;
 
 %% simulation
-warning off
+if flags.RUN_SIM
+    if exist('dcmotorparams.mat', 'file') == 2 && ~flags.FORCE_PARAMS
+        load('dcmotorparams.mat')
+    else
+        makedcmotorparams 
+    end
+    warning off
 
-isEvt = false; %#ok<NASGU>
-disp("Simulating in periodic control mode");
-periodicCtrlSim = sim('dcmotor_sim');
+    isEvt = false;
+    disp("Simulating in periodic control mode");
+    periodicCtrlSim = sim('dcmotor_sim');
 
-disp("Simulating in event-triggered control mode");
-isEvt = true;
-evtCtrlSim = sim('dcmotor_sim');
+    disp("Simulating in event-triggered control mode");
+    isEvt = true;
+    evtCtrlSim = sim('dcmotor_sim');
+    warning on
+    save('dcsim.mat');
+    tmp = rmfield(load('dcsim.mat'), 'flags');
+    % Resave, '-struct' flag tells MATLAB to store the fields as distinct variables
+    save('dcsim.mat', '-struct', 'tmp');
+elseif exist('dcsim.mat','file') == 2
+    load('dcsim.mat')
+else    
+    error("No sim data file, please run simulation");
+end
 
-warning on
 
 %% residual threshold
 t = evtCtrlSim.tout;
@@ -44,16 +53,19 @@ rbar = max(sr.^t, 1e-10);
 
 
 %% plot: general setup
-lw = 1.4;
+lw = 1.6;
 ttlfs = 15;
 tckfs = 12;
 
 figNames = {'comparison.eps';
             'alarms.eps';
             'states.eps';
-            'trigger.eps'};
+            'trigger.eps';
+            'phases.eps'};
         
-printer = @(i)  print(['-f' num2str(fi)], figNames{fi}, '-depsc2');
+printer = @(i)  print(['-f' num2str(i)], figNames{i}, '-depsc2');
+
+timeText = 'Time (seconds)';
 
 %% plot: residuals
 fi = 1;
@@ -71,17 +83,21 @@ plot(t, periodicResNorm, t, rbar, '--', 'LineWidth', lw);
 title("Periodic control", 'FontSize', ttlfs);
 set(gca, 'TickLabelInterpreter', 'latex', 'FontSize', tckfs);
 ylabel('$r$');
+grid on
 
 subplot(2,1,2)
 plot(t, evtResNorm, t, rbar, '--', 'LineWidth', lw);
 title("Event-triggered control", 'FontSize', ttlfs);
 set(gca, 'TickLabelInterpreter', 'latex', 'FontSize', tckfs);
 ylabel('$r$');
+ylim([0 5e-3]);
+xlabel(timeText);
+grid on
 
-if PRINT_FIGS, printer(fi), end %#ok<*UNRCH>
+if flags.PRINT_FIGS, printer(fi), end %#ok<*UNRCH>
 
 %% plot: alarms
-fi = fi+1;
+fi = 2;
 try close(fi), end
 
 figure(fi);
@@ -92,44 +108,92 @@ subplot(2,1,1)
 plot(t, periodicResNorm > rbar, 'LineWidth', lw);
 title("Periodic control", 'FontSize', ttlfs);
 set(gca, 'TickLabelInterpreter', 'latex', 'FontSize', tckfs);
-ylabel('$r$');
+ylabel('Alarm signal');
+ylim([-0.1 1.1]);
+grid on
 
 subplot(2,1,2)
 plot(t, evtResNorm > rbar, 'LineWidth', lw);
 title("Event-triggered control", 'FontSize', ttlfs);
 set(gca, 'TickLabelInterpreter', 'latex', 'FontSize', tckfs);
-ylabel('$r$');
+ylabel('Alarm signal');
+xlabel(timeText);
+ylim([-0.1 1.1]);
+grid on
 
-if PRINT_FIGS, printer(fi), end %#ok<*UNRCH>
+if flags.PRINT_FIGS, printer(fi), end %#ok<*UNRCH>
 
 %% plot: controlled state
-fi = fi+1;
+fi = 3;
 try close(fi), end
 
 figure(fi);
 set(fi, 'DefaultTextInterpreter', 'latex');
-set(fi, 'Units', 'normalized', 'Position', [0 0 .4 .6]);
-plot(evtCtrlSim.data.getElement('x').Values, 'LineWidth', lw);
+set(fi, 'Units', 'normalized', 'Position', [0 0 .4 .4]);
+plot(t,evtCtrlSim.data.getElement('x').Values.Data(:,1), 'LineWidth', lw);
 hold on
-plot(evtCtrlSim.data.getElement('ref').Values, 'LineWidth', lw);
-% ylim([-0.1 1.2]);
+grid on
+plot(t,evtCtrlSim.data.getElement('ref').Values.Data(:,1),'--', 'LineWidth', lw);
+legend({'Speed', 'Speed reference'}, 'Location', 'nw','interpreter', 'latex', 'fontsize', tckfs);
+ylim([-0.1 35]);
+set(gca,'TickLabelInterpreter', 'latex', 'FontSize', tckfs);
+xlabel(timeText, 'Interpreter', 'latex');
+ylabel('motor speed (rad/s)', 'Interpreter', 'latex');
 
-if PRINT_FIGS, printer(fi), end %#ok<*UNRCH>
+if flags.PRINT_FIGS, printer(fi), end %#ok<*UNRCH>
 
 %% plot: threshold error
-fi = fi+1;
+fi = 4;
+try close(fi), end
+
+terr = evtCtrlSim.data.getElement('trig_err').Values;
+tdelta = evtCtrlSim.data.getElement('delta_sin').Values;
+
+figure(fi);
+set(fi, 'DefaultTextInterpreter', 'latex');
+set(fi, 'Units', 'normalized', 'Position', [0 0 .4 .4]);
+plot(terr, 'LineWidth', lw);
+hold on
+grid on
+plot(tdelta, '--', 'LineWidth', lw);
+ylim([0.3 2.5]);
+ylabel('$\|\hat{x} - \bar x\|$','interpreter','latex');
+legend({'Trigger error', 'Threshold'}, 'Location', 'nw','interpreter', 'latex', 'fontsize', tckfs);
+set(gca,'TickLabelInterpreter', 'latex', 'FontSize', tckfs);
+xlabel(timeText,'Interpreter', 'latex');
+
+axes('Position', [0.55 0.6 0.33 0.3]);
+box on
+zoom_i = find(t >= 10 & t <= 10.2);
+plot(t(zoom_i), terr.Data(zoom_i,:), 'LineWidth', lw);
+hold on
+grid on
+plot(t(zoom_i), tdelta.Data(zoom_i,:), '--', 'LineWidth', lw);
+set(gca,'TickLabelInterpreter', 'latex');
+
+if flags.PRINT_FIGS, printer(fi), end %#ok<*UNRCH>
+
+%% plot: attack phase
+fi = 5;
 try close(fi), end
 
 figure(fi);
 set(fi, 'DefaultTextInterpreter', 'latex');
-set(fi, 'Units', 'normalized', 'Position', [0 0 .4 .6]);
-plot(evtCtrlSim.data.getElement('trig_err').Values, 'LineWidth', lw);
-hold on
-plot(evtCtrlSim.data.getElement('delta_sin').Values, 'LineWidth', lw);
-% ylim([0 0.1]);
-legend({'Trigger error', 'Threshold'}, 'Location', 'ne');
+set(fi, 'Units', 'normalized', 'Position', [0 0 .4 .4]);
+plot(evtCtrlSim.data.getElement('phase').Values, 'LineWidth', lw);
+xlabel(timeText,'Interpreter', 'latex');
+set(gca,'TickLabelInterpreter', 'latex', 'FontSize', tckfs);
+[~, ylabs] = enumeration('AttackPhase');
+yticklabels(ylabs);
+yticks([0 1 2]);
+ylim([-0.1 2.1]);
+% ylabel('Attack phase', 'interpreter', 'latex');
+% title('');
+ylabel('');
+title('Attack Phases', 'interpreter', 'latex', 'fontsize', ttlfs);
+grid on
 
-if PRINT_FIGS, printer(fi), end %#ok<*UNRCH>
+if flags.PRINT_FIGS, printer(fi), end %#ok<*UNRCH>
 
 %% utilities
 function y = sigNorm(s, p)
