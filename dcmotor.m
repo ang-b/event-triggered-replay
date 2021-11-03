@@ -39,7 +39,7 @@ r0 = spref;
 sr = 0.3;
 Mr = 17.5;
 
-rbar = max(sr.^t, 1e-10);
+rbar = max(Mr*sr.^t, 1e-10);
 
 % 
 % kflag = false;
@@ -82,16 +82,18 @@ subplot(2,1,1)
 plot(t, periodicResNorm, t, rbar, '--', 'LineWidth', lw);
 title("Periodic control", 'FontSize', ttlfs);
 set(gca, 'TickLabelInterpreter', 'latex', 'FontSize', tckfs);
-ylabel('$r$');
+ylabel('$\|r\|$');
+legend({'$\|r\|$', '$\bar{r}$'}, 'interpreter', 'latex', 'location', 'nw');
 grid on
 
 subplot(2,1,2)
 plot(t, evtResNorm, t, rbar, '--', 'LineWidth', lw);
 title("Event-triggered control", 'FontSize', ttlfs);
 set(gca, 'TickLabelInterpreter', 'latex', 'FontSize', tckfs);
-ylabel('$r$');
-ylim([0 5e-3]);
+ylabel('$\|r\|$');
+ylim([0 5e-2]);
 xlabel(timeText);
+legend({'$\|r\|$', '$\bar{r}$'}, 'interpreter', 'latex', 'location', 'nw');
 grid on
 
 if flags.PRINT_FIGS, printer(fi), end %#ok<*UNRCH>
@@ -130,10 +132,10 @@ try close(fi), end
 figure(fi);
 set(fi, 'DefaultTextInterpreter', 'latex');
 set(fi, 'Units', 'normalized', 'Position', [0 0 .4 .4]);
-plot(t,evtCtrlSim.data.getElement('x').Values.Data(:,1), 'LineWidth', lw);
+plot(t,periodicCtrlSim.data.getElement('x').Values.Data(:,1), 'LineWidth', lw);
 hold on
 grid on
-plot(t,evtCtrlSim.data.getElement('ref').Values.Data(:,1),'--', 'LineWidth', lw);
+plot(t,periodicCtrlSim.data.getElement('ref').Values.Data(:,1),'--', 'LineWidth', lw);
 legend({'Speed', 'Speed reference'}, 'Location', 'nw','interpreter', 'latex', 'fontsize', tckfs);
 ylim([-0.1 35]);
 set(gca,'TickLabelInterpreter', 'latex', 'FontSize', tckfs);
@@ -156,7 +158,7 @@ plot(terr, 'LineWidth', lw);
 hold on
 grid on
 plot(tdelta, '--', 'LineWidth', lw);
-ylim([0.3 2.5]);
+ylim([0 6]);
 ylabel('$\|\hat{x} - \bar x\|$','interpreter','latex');
 legend({'Trigger error', 'Threshold'}, 'Location', 'nw','interpreter', 'latex', 'fontsize', tckfs);
 set(gca,'TickLabelInterpreter', 'latex', 'FontSize', tckfs);

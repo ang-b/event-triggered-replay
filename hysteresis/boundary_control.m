@@ -34,8 +34,8 @@ gamma = AI \ B * K;
 
 is_out = true;
 xlast = zeros(n,1);
-N = 20;
-Ccal = ctr_n(Ad, Bd, N);
+N = 5;
+Ccal = pinv(ctr_n(Ad, Bd, N));
 
 for k = 1:Nsamples-1
     err(k) = norm(x(:,k) - xref);
@@ -45,8 +45,9 @@ for k = 1:Nsamples-1
         xlast = x(:,k);
         theta = randi([-30 30]) * pi/180;
         e(:,k) = -R(theta) * gradc(x(:,k)');
+        e(:,k) = e(:,k)/norm(e(:,k));
 %         u(:,k) = pinv(Bd)*(eye(n) - Ad)/norm(gamma) * ((1+eps)*delta*e(:,k)/norm(e(:,k)) + xlast);
-        u(:,k) = pinv(Ccal)*(delta*e(:,k)/norm(e(:,k)) + (eye(n) - Ad^N)*xlast);
+        u(:,k) = Bd'/norm(Bd*Bd')*AI*Tx*((1 + 1e-3)*delta*e(:,k) + xlast);
 %         u(:,k) =  -0.8 * K * (xlast - xref./isg_1');
     elseif err(k) >= delta
         triggers(k) = 0;
@@ -55,6 +56,7 @@ for k = 1:Nsamples-1
     else
         triggers(k) = -1;
         u(:,k) = u(:,k-1);
+        ulast = u(:,k);
     end
     
     x(:,k+1) = Ad*x(:,k) + Bd*u(:,k);
@@ -63,12 +65,16 @@ end
 % why is this wrong?
 % xbar =2*delta*e/norm(e) + x(:,1);
 
+%% fixed points
+
+xifp = Tx * inv(AI) * Bd * ulast;
+
 %%
 close all
 
 %%
 figure(1)
-plot(T, x')
+stairs(T, x')
 
 %%
 figure(2);

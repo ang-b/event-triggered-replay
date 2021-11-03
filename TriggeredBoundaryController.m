@@ -19,7 +19,6 @@ classdef TriggeredBoundaryController < matlab.System ...
 
     properties(Access = private)
         pB;
-        N;
         AIN;
     end
 
@@ -34,9 +33,22 @@ classdef TriggeredBoundaryController < matlab.System ...
             this.heldInput = zeros(size(this.B,2), 1);
             this.isOut = false;
             this.xlast = zeros(2, 1);
-            this.N = 20;
-            this.pB = pinv(ctr_n(this.A, this.B, this.N));
-            this.AIN = (eye(2) - this.A^this.N);
+            this.AIN = (eye(2) - this.A);
+            
+            [Qf,Lf] = qr(this.AIN.');
+            Qf = Qf.';
+            Lf = Lf.';
+
+            % assume the system is in form [0; B1]
+
+            Q1 = Qf(1,:);
+            Q2 = Qf(2,:);
+
+%             L1 = Lf(1:n-m,1:n-m);
+            L2 = Lf(2,1);
+            L3 = Lf(2,2);
+
+            this.pB = Q2.'/L3*L2*Q1 + Q2.'*Q2;
         end
         
         function [uTrig, trig] = stepImpl(this, xref, x, delta, theta)
@@ -47,7 +59,10 @@ classdef TriggeredBoundaryController < matlab.System ...
                      sin(theta)   cos(theta)];
                 e = M * 2 * x;
                 e = - e/norm(e);
-                uTrig = this.pB * ((1+eps)*delta*e + this.AIN*this.xlast);
+%                 uTrig = this.pB * ((1+eps)*delta*e + this.AIN*this.xlast);
+                uTrig = this.B.' * this.AIN * ...
+                        ((1+1e-4) * delta * e + this.xlast) / ...
+                        ( norm(this.pB) * norm(this.B*this.B.') );
                 this.heldInput = uTrig;
                 trig = true;
                 this.isOut = false;

@@ -16,7 +16,7 @@ r = 32.91;
 % l = 1.32442e-2;
 % r = 3.2645;
 
-spref = 200* 0.10472; % rad 2 rpm
+spref = 200* 0.10472; % rpm to rad: scale for 2*pi/60
 % spref = 1;
 
 %% CT state space representation
@@ -40,7 +40,7 @@ O = obsv(Ad,Cd);
 fprintf("Observability rank: %d\n", rank(O));
 
 % faster response, less overshoot
-cpoles = [0.8 + 0.01i, 0.8 - 0.01i];
+cpoles = [0.7 + 0.01i, 0.7 - 0.01i];
 % slower response, more overshoot
 % cpoles = [0.98 + 0.01i, 0.98 - 0.01i];
 % controller performance does not seem to impact detectablity much
@@ -117,6 +117,23 @@ L3 = Lf(n-m+1:end,n-m+1:end);
 X = Q2'*inv(L3)*L2*Q1 + Q2.'*Q2;
 
 invLBlock = [inv(L1) 0; -inv(L3)*L2*inv(L1) inv(L3)];
+
+Tx = [null(X) orth(X)];
+
+% LQ fact
+[Qx, Lx] = qr(X.');
+Qx = Qx.';
+Lx = Lx.';
+
+% RQ fact
+[Qx, Rx] = qr(X);
+
+%polar fact
+ [U,S,V] = svd(X);
+ Ux = U*V' ;
+ Px = V*S*V';
+ 
+ TP = [null(Px) orth(Px)];
 
 %% inverse dynamics
 

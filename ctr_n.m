@@ -9,15 +9,17 @@ m = size(B,2);
 %     Ct(:,((i-1)*m+1):(m*i)) = A^(i-1) * B;
 % end
 
-% Ct = zeros(n*N, m);
-% for i = 1:N
-%     Ct(((i-1)*n+1):n*i,:) = A^(i-1)*B; 
-% end
-
-
-Ct = zeros(n,m);
+Ct = zeros(n*N, m);
 for i = 1:N
-   Ct = Ct + A^(i-1)*B;
+    for j=1:i
+        Ct( (i-1)*n+1:n*i, (j-1)*m+1:m*j ) = A^(j-1)*B; 
+    end
 end
+
+
+% Ct = zeros(n,m);
+% for i = 1:N
+%    Ct = Ct + A^(i-1)*B;
+% end
 end
 
