@@ -1,9 +1,9 @@
 %% flags
 clearvars
 
-flags.FORCE_PARAMS = false;
-flags.PRINT_FIGS = true;
-flags.RUN_SIM = false;
+flags.FORCE_PARAMS = true;
+flags.PRINT_FIGS = false;
+flags.RUN_SIM = true;
 
 %% simulation
 if flags.RUN_SIM
@@ -176,26 +176,26 @@ set(gca,'TickLabelInterpreter', 'latex');
 if flags.PRINT_FIGS, printer(fi), end %#ok<*UNRCH>
 
 %% plot: attack phase
-fi = 5;
-try close(fi), end
-
-figure(fi);
-set(fi, 'DefaultTextInterpreter', 'latex');
-set(fi, 'Units', 'normalized', 'Position', [0 0 .4 .4]);
-plot(evtCtrlSim.data.getElement('phase').Values, 'LineWidth', lw);
-xlabel(timeText,'Interpreter', 'latex');
-set(gca,'TickLabelInterpreter', 'latex', 'FontSize', tckfs);
-[~, ylabs] = enumeration('AttackPhase');
-yticklabels(ylabs);
-yticks([0 1 2]);
-ylim([-0.1 2.1]);
-% ylabel('Attack phase', 'interpreter', 'latex');
-% title('');
-ylabel('');
-title('Attack Phases', 'interpreter', 'latex', 'fontsize', ttlfs);
-grid on
-
-if flags.PRINT_FIGS, printer(fi), end %#ok<*UNRCH>
+% fi = 5;
+% try close(fi), end
+% 
+% figure(fi);
+% set(fi, 'DefaultTextInterpreter', 'latex');
+% set(fi, 'Units', 'normalized', 'Position', [0 0 .4 .4]);
+% plot(evtCtrlSim.data.getElement('phase').Values, 'LineWidth', lw);
+% xlabel(timeText,'Interpreter', 'latex');
+% set(gca,'TickLabelInterpreter', 'latex', 'FontSize', tckfs);
+% [~, ylabs] = enumeration('AttackPhase');
+% yticklabels(ylabs);
+% yticks([0 1 2]);
+% ylim([-0.1 2.1]);
+% % ylabel('Attack phase', 'interpreter', 'latex');
+% % title('');
+% ylabel('');
+% title('Attack Phases', 'interpreter', 'latex', 'fontsize', ttlfs);
+% grid on
+% 
+% if flags.PRINT_FIGS, printer(fi), end %#ok<*UNRCH>
 
 %% utilities
 function y = sigNorm(s, p)

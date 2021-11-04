@@ -14,12 +14,18 @@ classdef TriggeredBoundaryController < matlab.System ...
         gamma(2,2); % open-loop discrete-time static gain
         mu(2,1); % closed-loop discrete-time static ffw compensation
         K(1,2); % feedback gain K
-        sat_bouns(1,2) = [-1 1]; % saturation bounds
+    end
+    
+    properties
+        sat_bounds(1,2); % saturation bounds
     end
 
     properties(Access = private)
-        pB;
+        G;
         AIN;
+        T;
+        iT;
+        beta;
     end
 
     methods
@@ -39,16 +45,18 @@ classdef TriggeredBoundaryController < matlab.System ...
             Qf = Qf.';
             Lf = Lf.';
 
-            % assume the system is in form [0; B1]
-
+            % assume the system is in form [0; b2]
             Q1 = Qf(1,:);
             Q2 = Qf(2,:);
 
-%             L1 = Lf(1:n-m,1:n-m);
+            % L1 not needed
             L2 = Lf(2,1);
             L3 = Lf(2,2);
 
-            this.pB = Q2.'/L3*L2*Q1 + Q2.'*Q2;
+            this.G = Q2.'/L3*L2*Q1 + Q2.'*Q2;
+            this.T = [orth(this.G) null(this.G)];
+            this.iT = pinv(this.G);
+            this.beta = 1/norm(this.iT);
         end
         
         function [uTrig, trig] = stepImpl(this, xref, x, delta, theta)
@@ -58,16 +66,18 @@ classdef TriggeredBoundaryController < matlab.System ...
                 M = [cos(theta)  -sin(theta); 
                      sin(theta)   cos(theta)];
                 e = M * 2 * x;
-                e = - e/norm(e);
-%                 uTrig = this.pB * ((1+eps)*delta*e + this.AIN*this.xlast);
+                e = - this.iT*this.G* e / norm(this.iT*this.G);
+%                 uTrig = this.G * ((1+eps)*delta*e + this.AIN*this.xlast);
                 uTrig = this.B.' * this.AIN * ...
-                        ((1+1e-4) * delta * e + this.xlast) / ...
-                        ( norm(this.pB) * norm(this.B*this.B.') );
+                        ((2 + eps) * delta * e + this.iT*this.xlast) / ...
+                        ( norm(this.B*this.B.'));
+                uTrig = min(this.sat_bounds(2), max(this.sat_bounds(1), uTrig));
                 this.heldInput = uTrig;
                 trig = true;
                 this.isOut = false;
             elseif err >= delta
                 uTrig = - this.K * ( x - xref./this.mu );
+                uTrig = min(this.sat_bounds(2), max(this.sat_bounds(1), uTrig));
                 trig = true;
                 this.isOut = true;
             else
@@ -77,7 +87,7 @@ classdef TriggeredBoundaryController < matlab.System ...
 %                 uTrig = zeros(size(this.heldInput));
                 trig = false;
             end
-            uTrig = min(20, max(-20, uTrig));
+%             uTrig = min(this.sat_bounds(2), max(this.sat_bounds(2), uTrig));
         end
 
         function resetImpl(this)

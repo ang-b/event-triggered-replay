@@ -40,11 +40,14 @@ O = obsv(Ad,Cd);
 fprintf("Observability rank: %d\n", rank(O));
 
 % faster response, less overshoot
-cpoles = [0.7 + 0.01i, 0.7 - 0.01i];
+cpoles = [0.4 + 0.01i, 0.4- 0.01i];
 % slower response, more overshoot
 % cpoles = [0.98 + 0.01i, 0.98 - 0.01i];
 % controller performance does not seem to impact detectablity much
 K = place(Ad, Bd, cpoles);
+
+umax = 20;
+umin = -20;
 
 z = tf('z', Ts);
 
@@ -53,7 +56,7 @@ x0 = zeros(2,1);
 L = place(Ad', Cd', [0.3, 0.1]).';
 
 % event triggering parameters
-delta = 5e-2 * abs(spref);
+delta = 1e-2 * abs(spref);
 isEvt = true; % this is for unmanaged simulations
 
 %% compute feedforward gain (automatic)
@@ -120,20 +123,6 @@ invLBlock = [inv(L1) 0; -inv(L3)*L2*inv(L1) inv(L3)];
 
 Tx = [null(X) orth(X)];
 
-% LQ fact
-[Qx, Lx] = qr(X.');
-Qx = Qx.';
-Lx = Lx.';
-
-% RQ fact
-[Qx, Rx] = qr(X);
-
-%polar fact
- [U,S,V] = svd(X);
- Ux = U*V' ;
- Px = V*S*V';
- 
- TP = [null(Px) orth(Px)];
 
 %% inverse dynamics
 
