@@ -1,9 +1,9 @@
 %% flags
 clearvars
 
-flags.FORCE_PARAMS = true;
-flags.PRINT_FIGS = false;
-flags.RUN_SIM = true;
+flags.FORCE_PARAMS = false;
+flags.PRINT_FIGS = true;
+flags.RUN_SIM = false;
 
 %% simulation
 if flags.RUN_SIM
@@ -63,7 +63,7 @@ figNames = {'comparison.eps';
             'trigger.eps';
             'phases.eps'};
         
-printer = @(i)  print(['-f' num2str(i)], figNames{i}, '-depsc2');
+printer = @(i)  print(['-f' num2str(i)], figNames{i}, '-depsc');
 
 timeText = 'Time (seconds)';
 
@@ -76,7 +76,7 @@ evtResNorm = sigNorm(evtCtrlSim.data.getElement('r').Values.Data, 2);
 
 figure(fi);
 set(fi, 'DefaultTextInterpreter', 'latex');
-set(fi, 'Units', 'normalized', 'Position', [0 0 .4 .6]);
+set(fi, 'Units', 'normalized', 'Position', [0 0 .4 .6]/1.4);
 
 subplot(2,1,1)
 plot(t, periodicResNorm, t, rbar, '--', 'LineWidth', lw);
@@ -104,7 +104,7 @@ try close(fi), end
 
 figure(fi);
 set(fi, 'DefaultTextInterpreter', 'latex');
-set(fi, 'Units', 'normalized', 'Position', [0 0 .4 .6]);
+set(fi, 'Units', 'normalized', 'Position', [0 0 .4 .6]/1.4);
 
 subplot(2,1,1)
 plot(t, periodicResNorm > rbar, 'LineWidth', lw);
@@ -131,7 +131,7 @@ try close(fi), end
 
 figure(fi);
 set(fi, 'DefaultTextInterpreter', 'latex');
-set(fi, 'Units', 'normalized', 'Position', [0 0 .4 .4]);
+set(fi, 'Units', 'normalized', 'Position', [0 0 .4 .25]/1.4);
 plot(t,periodicCtrlSim.data.getElement('x').Values.Data(:,1), 'LineWidth', lw);
 hold on
 grid on
@@ -153,25 +153,29 @@ tdelta = evtCtrlSim.data.getElement('delta_sin').Values;
 
 figure(fi);
 set(fi, 'DefaultTextInterpreter', 'latex');
-set(fi, 'Units', 'normalized', 'Position', [0 0 .4 .4]);
+set(fi, 'Units', 'normalized', 'Position', [0 0 .4 .4]/1.4);
 plot(terr, 'LineWidth', lw);
 hold on
 grid on
 plot(tdelta, '--', 'LineWidth', lw);
-ylim([0 6]);
+ylim([0 1.5]);
 ylabel('$\|\hat{x} - \bar x\|$','interpreter','latex');
 legend({'Trigger error', 'Threshold'}, 'Location', 'nw','interpreter', 'latex', 'fontsize', tckfs);
 set(gca,'TickLabelInterpreter', 'latex', 'FontSize', tckfs);
 xlabel(timeText,'Interpreter', 'latex');
+parentAx = gca;
 
-axes('Position', [0.55 0.6 0.33 0.3]);
+axes('Position', [0.5 0.5 0.45 0.4]);
 box on
-zoom_i = find(t >= 10 & t <= 10.2);
-plot(t(zoom_i), terr.Data(zoom_i,:), 'LineWidth', lw);
+zoom_i = find(t >= 10 & t <= 10.1);
+stairs(t(zoom_i), terr.Data(zoom_i,:), 'LineWidth', lw);
 hold on
 grid on
 plot(t(zoom_i), tdelta.Data(zoom_i,:), '--', 'LineWidth', lw);
 set(gca,'TickLabelInterpreter', 'latex');
+
+InSet = get(parentAx, 'TightInset');
+set(parentAx, 'Position', [InSet(1:2), 1-InSet(1)-InSet(3), 1-InSet(2)-InSet(4)])
 
 if flags.PRINT_FIGS, printer(fi), end %#ok<*UNRCH>
 

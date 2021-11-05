@@ -54,9 +54,7 @@ classdef TriggeredBoundaryController < matlab.System ...
             L3 = Lf(2,2);
 
             this.G = Q2.'/L3*L2*Q1 + Q2.'*Q2;
-            this.T = [orth(this.G) null(this.G)];
-            this.iT = pinv(this.G);
-            this.beta = 1/norm(this.iT);
+            this.pinvG = pinv(this.G);
         end
         
         function [uTrig, trig] = stepImpl(this, xref, x, delta, theta)
@@ -66,10 +64,10 @@ classdef TriggeredBoundaryController < matlab.System ...
                 M = [cos(theta)  -sin(theta); 
                      sin(theta)   cos(theta)];
                 e = M * 2 * x;
-                e = - this.iT*this.G* e / norm(this.iT*this.G);
+                e = - this.pinvG*this.G*e / norm(this.pinvG*this.G*e);
 %                 uTrig = this.G * ((1+eps)*delta*e + this.AIN*this.xlast);
                 uTrig = this.B.' * this.AIN * ...
-                        ((2 + eps) * delta * e + this.iT*this.xlast) / ...
+                        ((2 + eps) * delta * norm(this.pinvG) * e + this.pinvG*this.xlast) / ...
                         ( norm(this.B*this.B.'));
                 uTrig = min(this.sat_bounds(2), max(this.sat_bounds(1), uTrig));
                 this.heldInput = uTrig;
