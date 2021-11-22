@@ -1,11 +1,11 @@
-%% flags
+% flags
 clearvars
 
 flags.FORCE_PARAMS = false;
 flags.PRINT_FIGS = true;
 flags.RUN_SIM = false;
 
-%% simulation
+% simulation
 if flags.RUN_SIM
     if exist('dcmotorparams.mat', 'file') == 2 && ~flags.FORCE_PARAMS
         load('dcmotorparams.mat')
@@ -32,8 +32,7 @@ else
     error("No sim data file, please run simulation");
 end
 
-
-%% residual threshold
+% residual threshold
 t = evtCtrlSim.tout;
 r0 = spref;
 sr = 0.3;
@@ -51,8 +50,7 @@ rbar = max(Mr*sr.^t, 1e-10);
 %     end
 % end
 
-
-%% plot: general setup
+% plot general setup
 lw = 1.6;
 ttlfs = 15;
 tckfs = 12;
@@ -140,7 +138,7 @@ legend({'Speed', 'Speed reference'}, 'Location', 'nw','interpreter', 'latex', 'f
 ylim([-0.1 35]);
 set(gca,'TickLabelInterpreter', 'latex', 'FontSize', tckfs);
 xlabel(timeText, 'Interpreter', 'latex');
-ylabel('motor speed (rad/s)', 'Interpreter', 'latex');
+ylabel('Motor speed (rad/s)', 'Interpreter', 'latex');
 
 if flags.PRINT_FIGS, printer(fi), end %#ok<*UNRCH>
 
